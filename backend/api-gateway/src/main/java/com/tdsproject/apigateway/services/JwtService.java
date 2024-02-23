@@ -1,11 +1,11 @@
 package com.tdsproject.apigateway.services;
 
+import com.tdsproject.apigateway.entities.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -28,9 +28,14 @@ public class JwtService {
     public String extractEmail(String token){
         return extractClaim(token, Claims::getSubject);
     }
+    public String extractUserId(String token){
+        return extractClaim(token, claims -> claims.get("id", String.class));
+    }
 
-    public String generateToken(UserDetails userDetails){
-        return generateToken(new HashMap<>(), userDetails);
+    public String generateToken(User user){
+        var claims = new HashMap<String, Object>();
+        claims.put("id", String.valueOf(user.getId()));
+        return generateToken(claims, user);
     }
 
     public String generateToken(Map<String, Object> claims, UserDetails userDetails){
