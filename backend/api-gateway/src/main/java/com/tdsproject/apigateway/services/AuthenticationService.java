@@ -3,13 +3,19 @@ package com.tdsproject.apigateway.services;
 import com.tdsproject.apigateway.contracts.AuthenticationRequest;
 import com.tdsproject.apigateway.contracts.AuthenticationResponse;
 import com.tdsproject.apigateway.contracts.RegisterRequest;
+import com.tdsproject.apigateway.entities.PasswordResetTokenEntity;
 import com.tdsproject.apigateway.entities.User;
 import com.tdsproject.apigateway.repositories.UserRepository;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.tdsproject.apigateway.repositories.PasswordResetTokenRepository;
 
 @Service
 public class AuthenticationService {
@@ -22,6 +28,11 @@ public class AuthenticationService {
     private JwtService jwtService;
     @Autowired
     private AuthenticationManager authManager;
+    @Autowired
+    private EmailServiceImpl emailService;
+    @Autowired
+    private PasswordResetTokenRepository passwordResetTokenRepository;
+
 
     public AuthenticationResponse register(RegisterRequest request){
         User user = new User(
@@ -51,4 +62,33 @@ public class AuthenticationService {
 
         return new AuthenticationResponse(jwtToken);
     }
+
+    public void forgotPassword(String email) {
+        String resetToken = generateResetToken(email);
+        emailService.sendPasswordResetEmail(email, resetToken);
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        String email = validateResetToken(token);
+        User user = repository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setPassword(passwordEncoder.encode(newPassword));
+        repository.save(user);
+    }
+
+    private String generateResetToken(String email) {
+        String resetToken = UUID.randomUUID().toString();
+        PasswordResetTokenEntity tokenEntity = new PasswordResetTokenEntity(email, resetToken, LocalDateTime.now().plusHours(1));
+        passwordResetTokenRepository.save(tokenEntity);
+        return resetToken;
+    }
+
+    private String validateResetToken(String token) {
+        PasswordResetTokenEntity tokenEntity = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid or expired token"));
+        if (tokenEntity.getExpiryDateTime().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Token expired");
+        }
+        return tokenEntity.getEmail();
+    }
+
 }
