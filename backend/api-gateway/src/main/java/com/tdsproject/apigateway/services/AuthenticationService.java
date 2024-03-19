@@ -29,7 +29,9 @@ public class AuthenticationService {
     @Autowired
     private AuthenticationManager authManager;
     @Autowired
-    private EmailServiceImpl emailService;
+    private EmailServiceImpl emailServiceImpl;
+    @Autowired
+    private EmailService emailService;
     @Autowired
     private PasswordResetTokenRepository passwordResetTokenRepository;
 

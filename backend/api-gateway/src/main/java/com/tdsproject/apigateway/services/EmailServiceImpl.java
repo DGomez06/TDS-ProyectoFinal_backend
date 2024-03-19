@@ -16,7 +16,7 @@ public class EmailServiceImpl implements EmailService {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
         message.setSubject("Password Reset");
-        message.setText("To reset your password, click the following link: http://yourdomain.com/reset?token=" + resetToken);
+        message.setText("To reset your password, use this token: " + resetToken);
 
         emailSender.send(message);
     }
