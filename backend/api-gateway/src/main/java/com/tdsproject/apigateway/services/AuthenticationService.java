@@ -9,6 +9,7 @@ import com.tdsproject.apigateway.repositories.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -78,7 +79,8 @@ public class AuthenticationService {
     }
 
     private String generateResetToken(String email) {
-        String resetToken = UUID.randomUUID().toString();
+        Random random = new Random();
+        String resetToken = String.ValueOf((random.nextInt(90000) + 10000))
         PasswordResetTokenEntity tokenEntity = new PasswordResetTokenEntity(email, resetToken, LocalDateTime.now().plusHours(1));
         passwordResetTokenRepository.save(tokenEntity);
         return resetToken;
