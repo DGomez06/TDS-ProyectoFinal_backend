@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
+import java.util.Objects;
 
 
 @RestController
@@ -41,6 +42,16 @@ public class AuthenticationController {
         return ResponseEntity.ok("Password reset email sent successfully");
     }
 
+    @PostMapping("/verify-token")
+    public ResponseEntity<?> verifyToken(@RequestBody HashMap<String, String> tokenMap) {
+        String resetToken = tokenMap.get("resetToken");
+        String userEmail = service.validateResetToken(resetToken);
+        if (userEmail != null) {
+            return ResponseEntity.ok("Token verified successfully");
+        } else {
+            return ResponseEntity.badRequest().body("Invalid token");
+        }
+    }
 
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody HashMap<String, String> passwordMap){
@@ -48,7 +59,5 @@ public class AuthenticationController {
         String newPassword = passwordMap.get("newPassword");
         service.resetPassword(resetToken, newPassword);
         return ResponseEntity.ok("Password reset successful");
-}
-
-
+    }
 }

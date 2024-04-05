@@ -6,5 +6,6 @@ public record PropertyDTO(
         Integer size,
         Integer rooms,
         Integer bathrooms,
-        Double price
+        Double price,
+        String type
 ) { }

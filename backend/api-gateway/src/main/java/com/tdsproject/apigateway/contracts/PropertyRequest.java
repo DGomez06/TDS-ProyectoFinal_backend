@@ -7,6 +7,7 @@ public record PropertyRequest(
         Integer size,
         Integer rooms,
         Integer bathrooms,
-        Double price
+        Double price,
+        String type
 ) {
 }

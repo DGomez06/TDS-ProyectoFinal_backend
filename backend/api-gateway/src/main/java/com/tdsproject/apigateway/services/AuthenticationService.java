@@ -8,7 +8,7 @@ import com.tdsproject.apigateway.entities.User;
 import com.tdsproject.apigateway.repositories.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -78,13 +78,15 @@ public class AuthenticationService {
     }
 
     private String generateResetToken(String email) {
-        String resetToken = UUID.randomUUID().toString();
+        Random random = new Random();
+        int randomNumber = random.nextInt(90000) + 10000;
+        String resetToken = String.valueOf(randomNumber);
         PasswordResetTokenEntity tokenEntity = new PasswordResetTokenEntity(email, resetToken, LocalDateTime.now().plusHours(1));
         passwordResetTokenRepository.save(tokenEntity);
         return resetToken;
     }
 
-    private String validateResetToken(String token) {
+    public String validateResetToken(String token) {
         PasswordResetTokenEntity tokenEntity = passwordResetTokenRepository.findByToken(token)
                 .orElseThrow(() -> new RuntimeException("Invalid or expired token"));
         if (tokenEntity.getExpiryDateTime().isBefore(LocalDateTime.now())) {

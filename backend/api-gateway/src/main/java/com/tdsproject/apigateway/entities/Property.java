@@ -15,16 +15,18 @@ public class Property {
     public Integer rooms;
     public Integer bathrooms;
     public Double price;
+    public String type;
 
     public Property(){}
 
-    public Property(User owner, String address, Integer size, Integer rooms, Integer bathrooms, Double price) {
+    public Property(User owner, String address, Integer size, Integer rooms, Integer bathrooms, Double price, String type) {
         this.owner = owner;
         this.address = address;
         this.size = size;
         this.rooms = rooms;
         this.bathrooms = bathrooms;
         this.price = price;
+        this.type = type;
     }
 
     public Integer getId() {
@@ -77,5 +79,13 @@ public class Property {
 
     public void setPrice(Double price) {
         this.price = price;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }
