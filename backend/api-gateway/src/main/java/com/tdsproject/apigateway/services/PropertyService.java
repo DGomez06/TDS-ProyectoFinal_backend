@@ -1,20 +1,25 @@
 package com.tdsproject.apigateway.services;
 
+import com.tdsproject.apigateway.DTO.OwnerDTO;
 import com.tdsproject.apigateway.DTO.PropertyDTO;
 import com.tdsproject.apigateway.contracts.PropertyRequest;
+import com.tdsproject.apigateway.contracts.PropertyResponse;
 import com.tdsproject.apigateway.entities.Property;
+import com.tdsproject.apigateway.entities.StatusEnum;
 import com.tdsproject.apigateway.entities.User;
+import com.tdsproject.apigateway.exception.ApiNotFoundException;
 import com.tdsproject.apigateway.repositories.PropertyRepository;
 import com.tdsproject.apigateway.repositories.UserRepository;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 public class PropertyService {
@@ -31,95 +36,183 @@ public class PropertyService {
         String token = authHeader.substring(7);
         var usrID = jwtService.extractUserId(token);
         User usr = usrRepository.findById(Integer.parseInt(usrID)).orElseThrow();
-        Property property = new Property(
+
+        Property propertyToSave = new Property(
                 usr,
                 propertyRequest.address(),
+                StatusEnum.AVAILABLE,
+                propertyRequest.description(),
                 propertyRequest.size(),
                 propertyRequest.rooms(),
                 propertyRequest.bathrooms(),
                 propertyRequest.price(),
-                propertyRequest.type()
+                propertyRequest.type(),
+                propertyRequest.latitude(),
+                propertyRequest.longitude()
         );
-        Property toMapped = repository.save(property);
+
+        Property property = repository.save(propertyToSave);
+
         return new PropertyDTO(
-                toMapped.getId(),
-                toMapped.getAddress(),
-                toMapped.getSize(),
-                toMapped.getRooms(),
-                toMapped.getBathrooms(),
-                toMapped.getPrice(),
-                toMapped.getType()
+                property.getId(),
+                property.getAddress(),
+                property.getStatus(),
+                property.getDescription(),
+                property.getSize(),
+                property.getRooms(),
+                property.getBathrooms(),
+                property.getPrice(),
+                property.getType(),
+                property.getLatitude(),
+                property.getLongitude(),
+                property.getImages(),
+                new OwnerDTO(
+                        property.getOwner().getId(),
+                        property.getOwner().getFirstName(),
+                        property.getOwner().getLastName(),
+                        property.getOwner().getEmail(),
+                        property.getOwner().getPhone()
+                )
         );
     }
 
-    public List<Property> getAllProperties() {
-        return repository.findAll();
+    public List<PropertyDTO> getAllOwned(String authHeader){
+        String token = authHeader.substring(7);
+        var usrID = jwtService.extractUserId(token);
+        User usr = usrRepository.findById(Integer.parseInt(usrID)).orElseThrow();
+
+        Property example = new Property();
+        example.setOwner(usr);
+
+        ExampleMatcher matcher = ExampleMatcher.matching()
+                .withIgnoreCase()
+                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
+
+        List<Property> propertyList = repository.findAll(Example.of(example, matcher));
+        List<PropertyDTO> propertyDTOS = new ArrayList<>();
+
+        for (Property property : propertyList) {
+            PropertyDTO propertyDTO = new PropertyDTO(
+                    property.getId(),
+                    property.getAddress(),
+                    property.getStatus(),
+                    property.getDescription(),
+                    property.getSize(),
+                    property.getRooms(),
+                    property.getBathrooms(),
+                    property.getPrice(),
+                    property.getType(),
+                    property.getLatitude(),
+                    property.getLongitude(),
+                    property.getImages(),
+                    new OwnerDTO(
+                            property.getOwner().getId(),
+                            property.getOwner().getFirstName(),
+                            property.getOwner().getLastName(),
+                            property.getOwner().getEmail(),
+                            property.getOwner().getPhone()
+                    )
+            );
+            propertyDTOS.add(propertyDTO);
+        }
+
+        return propertyDTOS;
     }
 
-    public List<Property> filterProperties(String propertyType, Double minPrice, Double maxPrice, Integer minRooms, Integer maxRooms, Integer minBathrooms, Integer maxBathrooms) {
-        StringBuilder queryString = new StringBuilder("SELECT p FROM Property p WHERE 1=1");
-        if (propertyType != null) {
-            queryString.append(" AND p.type = :type");
-        }
-        if (minPrice != null) {
-            queryString.append(" AND p.price >= :minPrice");
-        }
-        if (maxPrice != null) {
-            queryString.append(" AND p.price <= :maxPrice");
-        }
-        if (minRooms != null) {
-            queryString.append(" AND p.rooms >= :minRooms");
-        }
-        if (maxRooms != null) {
-            queryString.append(" AND p.rooms <= :maxRooms");
-        }
-        if (minBathrooms != null) {
-            queryString.append(" AND p.bathrooms >= :minBathrooms");
-        }
-        if (maxBathrooms != null) {
-            queryString.append(" AND p.bathrooms <= :maxBathrooms");
-        }
+    public PropertyDTO getById(Integer id) {
+        Optional<Property> property = repository.findById(id);
+        System.out.println("******************************************HOLA****************************************");
 
-        Query query = entityManager.createQuery(queryString.toString(), Property.class);
+        if (property.isEmpty()) throw new ApiNotFoundException("Property not found with given id: " + id);
 
-        if (propertyType != null) {
-            query.setParameter("type", propertyType);
-        }
-        if (minPrice != null) {
-            query.setParameter("minPrice", minPrice);
-        }
-        if (maxPrice != null) {
-            query.setParameter("maxPrice", maxPrice);
-        }
-        if (minRooms != null) {
-            query.setParameter("minRooms", minRooms);
-        }
-        if (maxRooms != null) {
-            query.setParameter("maxRooms", maxRooms);
-        }
-        if (minBathrooms != null) {
-            query.setParameter("minBathrooms", minBathrooms);
-        }
-        if (maxBathrooms != null) {
-            query.setParameter("maxBathrooms", maxBathrooms);
-        }
-
-        List<Property> properties = query.getResultList();
-        return properties;
+        return new PropertyDTO(
+                property.get().getId(),
+                property.get().getAddress(),
+                property.get().getStatus(),
+                property.get().getDescription(),
+                property.get().getSize(),
+                property.get().getRooms(),
+                property.get().getBathrooms(),
+                property.get().getPrice(),
+                property.get().getType(),
+                property.get().getLatitude(),
+                property.get().getLongitude(),
+                property.get().getImages(),
+                    new OwnerDTO(
+                            property.get().getOwner().getId(),
+                            property.get().getOwner().getFirstName(),
+                            property.get().getOwner().getLastName(),
+                            property.get().getOwner().getEmail(),
+                            property.get().getOwner().getPhone()
+                    )
+        );
     }
 
-    public List<PropertyDTO> filterAndMapProperties(String propertyType, Double minPrice, Double maxPrice, Integer minRooms, Integer maxRooms, Integer minBathrooms, Integer maxBathrooms) {
-        List<Property> filteredProperties = filterProperties(propertyType, minPrice, maxPrice, minRooms, maxRooms, minBathrooms, maxBathrooms);
-        return filteredProperties.stream()
-                .map(property -> new PropertyDTO(
-                        property.getId(),
-                        property.getAddress(),
-                        property.getSize(),
-                        property.getRooms(),
-                        property.getBathrooms(),
-                        property.getPrice(),
-                        property.getType()
-                ))
-                .collect(Collectors.toList());
+    public PropertyResponse getAllProperties(
+            Optional<Integer> page,
+            Integer rooms,
+            Integer bathrooms,
+            String propertyType,
+            String address,
+            Optional<Double> minPrice,
+            Optional<Double> maxPrice
+    ) {
+        Property example = new Property();
+        example.setType(propertyType);
+        example.setRooms(rooms);
+        example.setBathrooms(bathrooms);
+        example.setAddress(address);
+        example.setStatus(StatusEnum.AVAILABLE);
+
+        ExampleMatcher matcher = ExampleMatcher.matching()
+                .withIgnoreNullValues()
+                .withIgnoreCase()
+                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
+
+        Pageable pageable = PageRequest.of(page.orElse(0), 20);
+
+        Page<Property> propertyPage = repository.findAll(Example.of(example, matcher), pageable);
+
+        List<PropertyDTO> propertyByPrice = new ArrayList<>();
+        List<Property> properties = propertyPage.getContent();
+        double price = 0;
+
+        for (Property property : properties) {
+            price = property.getPrice();
+            if ((minPrice.isPresent() && price < minPrice.get()) ||
+                    (maxPrice.isPresent() && price > maxPrice.get())) {
+                continue; // Skip properties outside the price range
+            }
+
+            PropertyDTO propertyDTO = new PropertyDTO(
+                    property.getId(),
+                    property.getAddress(),
+                    property.getStatus(),
+                    property.getDescription(),
+                    property.getSize(),
+                    property.getRooms(),
+                    property.getBathrooms(),
+                    property.getPrice(),
+                    property.getType(),
+                    property.getLatitude(),
+                    property.getLongitude(),
+                    property.getImages(),
+                    new OwnerDTO(
+                            property.getOwner().getId(),
+                            property.getOwner().getFirstName(),
+                            property.getOwner().getLastName(),
+                            property.getOwner().getEmail(),
+                            property.getOwner().getPhone()
+                    )
+            );
+            propertyByPrice.add(propertyDTO);
+        }
+
+
+        return new PropertyResponse(
+                propertyPage.getNumber(),
+                propertyPage.getTotalPages(),
+                propertyByPrice
+        );
     }
 }

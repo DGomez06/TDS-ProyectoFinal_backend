@@ -4,10 +4,13 @@ import com.tdsproject.apigateway.entities.User;
 
 public record PropertyRequest(
         String address,
+        String description,
         Integer size,
         Integer rooms,
         Integer bathrooms,
         Double price,
-        String type
+        String type,
+        Double latitude,
+        Double longitude
 ) {
 }
