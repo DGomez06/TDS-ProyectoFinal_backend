@@ -215,4 +215,50 @@ public class PropertyService {
                 propertyByPrice
         );
     }
+
+    public PropertyDTO editProperty(Integer id, PropertyRequest propertyRequest) {
+        Property property = repository.findById(id)
+                .orElseThrow(() -> new ApiNotFoundException("Property not found with given id: " + id));
+
+        property.setAddress(propertyRequest.address());
+        property.setDescription(propertyRequest.description());
+        property.setSize(propertyRequest.size());
+        property.setRooms(propertyRequest.rooms());
+        property.setBathrooms(propertyRequest.bathrooms());
+        property.setPrice(propertyRequest.price());
+        property.setType(propertyRequest.type());
+        property.setLatitude(propertyRequest.latitude());
+        property.setLongitude(propertyRequest.longitude());
+
+        Property updatedProperty = repository.save(property);
+
+        return new PropertyDTO(
+                updatedProperty.getId(),
+                updatedProperty.getAddress(),
+                updatedProperty.getStatus(),
+                updatedProperty.getDescription(),
+                updatedProperty.getSize(),
+                updatedProperty.getRooms(),
+                updatedProperty.getBathrooms(),
+                updatedProperty.getPrice(),
+                updatedProperty.getType(),
+                updatedProperty.getLatitude(),
+                updatedProperty.getLongitude(),
+                updatedProperty.getImages(),
+                new OwnerDTO(
+                        updatedProperty.getOwner().getId(),
+                        updatedProperty.getOwner().getFirstName(),
+                        updatedProperty.getOwner().getLastName(),
+                        updatedProperty.getOwner().getEmail(),
+                        updatedProperty.getOwner().getPhone()
+                )
+        );
+    }
+
+    public void deleteProperty(Integer id) {
+        if (!repository.existsById(id)) {
+            throw new ApiNotFoundException("Property not found with given id: " + id);
+        }
+        repository.deleteById(id);
+    }
 }

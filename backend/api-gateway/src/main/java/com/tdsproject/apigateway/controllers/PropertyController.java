@@ -6,7 +6,9 @@ import com.tdsproject.apigateway.contracts.PropertyResponse;
 import com.tdsproject.apigateway.services.PropertyService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -62,4 +64,23 @@ public class PropertyController {
         )));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> editProperty(@PathVariable Integer id, @Validated @RequestBody PropertyRequest propertyRequest) {
+        try {
+            var editedProperty = service.editProperty(id, propertyRequest);
+            return ResponseEntity.ok(editedProperty);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al editar la propiedad: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteProperty(@PathVariable Integer id) {
+        try {
+            service.deleteProperty(id);
+            return ResponseEntity.ok("Propiedad eliminada exitosamente");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al eliminar la propiedad: " + e.getMessage());
+        }
+    }
 }
