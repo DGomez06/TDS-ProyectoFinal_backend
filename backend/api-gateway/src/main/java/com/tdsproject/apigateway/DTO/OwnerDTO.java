@@ -1,5 +1,6 @@
 package com.tdsproject.apigateway.DTO;
 
+import com.tdsproject.apigateway.entities.User;
 import jakarta.persistence.Column;
 
 public record OwnerDTO(
@@ -9,4 +10,13 @@ public record OwnerDTO(
         String email,
         String phone
 ) {
+    public static OwnerDTO get(User user){
+        return new OwnerDTO(
+                user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getEmail(),
+                user.getPhone()
+        );
+    }
 }

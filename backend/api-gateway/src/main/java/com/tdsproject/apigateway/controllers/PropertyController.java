@@ -1,8 +1,12 @@
 package com.tdsproject.apigateway.controllers;
 
+import com.tdsproject.apigateway.DTO.ContractDTO;
+import com.tdsproject.apigateway.DTO.FavoriteDTO;
 import com.tdsproject.apigateway.DTO.PropertyDTO;
 import com.tdsproject.apigateway.contracts.PropertyRequest;
 import com.tdsproject.apigateway.contracts.PropertyResponse;
+import com.tdsproject.apigateway.services.ContractService;
+import com.tdsproject.apigateway.services.FavoriteService;
 import com.tdsproject.apigateway.services.PropertyService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +24,10 @@ public class PropertyController {
 
     @Autowired
     private PropertyService service;
+    @Autowired
+    private FavoriteService favoriteService;
+    @Autowired
+    private ContractService contractService;
 
     @PostMapping
     public ResponseEntity<PropertyDTO> saveProperty(
@@ -82,5 +90,43 @@ public class PropertyController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al eliminar la propiedad: " + e.getMessage());
         }
+    }
+
+    @PostMapping("/favorites/{id}")
+    public ResponseEntity<FavoriteDTO> addFavorite(
+            @PathVariable("id") Integer propertyId,
+            HttpServletRequest servletRequest
+    ){
+        return ResponseEntity.ok(
+                favoriteService.save(propertyId, servletRequest.getHeader("Authorization"))
+        );
+    }
+
+    @GetMapping("/favorites")
+    public ResponseEntity<List<FavoriteDTO>> getAllFavorites(HttpServletRequest servletRequest){
+        return ResponseEntity.ok(favoriteService.getAllFavorites(servletRequest.getHeader("Authorization")));
+    }
+
+    @DeleteMapping("/favorites/{id}")
+    public ResponseEntity<String> deleteFavorite(@PathVariable("id") Integer favoriteId){
+        favoriteService.deleteFavorite(favoriteId);
+        return ResponseEntity.ok("DELETED");
+    }
+
+
+    @PostMapping("/notify/{id}")
+    public ResponseEntity<String> notifyOwner(
+            @PathVariable("id") Integer propertyId,
+            HttpServletRequest servletRequest
+    ){
+        contractService.notifyOwner(servletRequest.getHeader("Authorization"), propertyId);
+        return ResponseEntity.ok("Owner notified!");
+    }
+
+    @PostMapping("/feed")
+    public ResponseEntity<List<ContractDTO>> getAllFeed(
+            HttpServletRequest servletRequest
+    ){
+        return ResponseEntity.ok(contractService.getFeed(servletRequest.getHeader("Authorization")));
     }
 }
