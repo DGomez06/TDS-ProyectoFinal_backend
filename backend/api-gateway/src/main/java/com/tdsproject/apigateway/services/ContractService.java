@@ -180,7 +180,7 @@ public class ContractService {
         if (usr.isEmpty()) throw new ApiNotFoundException("User not found with given id: "+ userId);
 
         Contract example= new Contract();
-        example.setClient(usr.get());
+        example.setOwner(usr.get());
         example.setStatus(StatusEnum.IN_CONTRACT);
 
         ExampleMatcher matcher = ExampleMatcher.matching()
