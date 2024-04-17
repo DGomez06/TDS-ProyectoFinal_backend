@@ -35,7 +35,7 @@ public class UserService {
         );
     }
 
-    public OwnerDTO updateUser(Integer id, RegisterRequest userRequest){
+    public OwnerDTO updateUser(Integer id, OwnerDTO userRequest){
         Optional<User> user = userRepository.findById(id);
 
         if(user.isEmpty()) throw new ApiNotFoundException("User not found with given id: "+ id);
@@ -63,5 +63,10 @@ public class UserService {
 
         user.get().setPassword(passwordEncoder.encode(passwordRequest.password()));
         userRepository.save(user.get());
+    }
+
+    public void deleteUser(Integer id){
+        if(!userRepository.existsById(id)) throw new ApiNotFoundException("User not found with given id: "+ id);
+        userRepository.deleteById(id);
     }
 }

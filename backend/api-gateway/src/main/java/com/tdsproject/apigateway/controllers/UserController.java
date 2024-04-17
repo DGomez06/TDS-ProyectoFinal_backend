@@ -24,7 +24,7 @@ public class UserController {
     @PutMapping
     public ResponseEntity<OwnerDTO> updateUser(
             HttpServletRequest servletRequest,
-            @RequestBody RegisterRequest user
+            @RequestBody OwnerDTO user
             ){
         String token = servletRequest.getHeader("Authorization").substring(7);
         var usrID = jwtService.extractUserId(token);
@@ -40,6 +40,17 @@ public class UserController {
         String token = servletRequest.getHeader("Authorization").substring(7);
         var usrID = jwtService.extractUserId(token);
         userService.updaterPassword(Integer.parseInt(usrID), passwordRequest);
+
+        return ResponseEntity.ok("Success!");
+    }
+
+    @PostMapping
+    public ResponseEntity<String> deleteUser(
+            HttpServletRequest servletRequest
+    ){
+        String token = servletRequest.getHeader("Authorization").substring(7);
+        var usrID = jwtService.extractUserId(token);
+        userService.deleteUser(Integer.parseInt(usrID));
 
         return ResponseEntity.ok("Success!");
     }
