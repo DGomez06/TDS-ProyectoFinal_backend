@@ -1,8 +1,13 @@
 package com.tdsproject.apigateway.services;
 
+import com.google.firebase.FirebaseException;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.Message;
+import com.google.firebase.messaging.Notification;
 import com.tdsproject.apigateway.DTO.ContractDTO;
 import com.tdsproject.apigateway.DTO.DashboardDTO;
 import com.tdsproject.apigateway.DTO.PropertyDTO;
+import com.tdsproject.apigateway.contracts.NotifyRequest;
 import com.tdsproject.apigateway.entities.Contract;
 import com.tdsproject.apigateway.entities.Property;
 import com.tdsproject.apigateway.entities.StatusEnum;
@@ -32,7 +37,7 @@ public class ContractService {
     @Autowired
     private JwtService jwtService;
 
-    public void notifyOwner(String authHeader, Integer propertyId){
+    public String notifyOwner(String authHeader, Integer propertyId, NotifyRequest notifyToken){
         String token = authHeader.substring(7);
         var userId = jwtService.extractUserId(token);
         Optional<User> usr = userRepository.findById(Integer.parseInt(userId));
@@ -46,6 +51,25 @@ public class ContractService {
                 usr.get(),
                 property.get()
         ));
+
+        FirebaseMessaging firebaseMessaging = FirebaseMessaging.getInstance();
+        Notification notification = Notification.builder()
+                .setTitle("Solicitud de arrendamiento")
+                .setBody("Solicitante: " + usr.get().getFirstName() + " " + usr.get().getLastName())
+                .setImage(property.get().getImages().get(0).getURL())
+                .build();
+
+        Message message = Message.builder()
+                .setToken(notifyToken.notifyToken())
+                .setNotification(notification)
+                .build();
+
+        try {
+            firebaseMessaging.send(message);
+            return "mandado";
+        }catch (FirebaseException e){
+            return "error";
+        }
     }
 
     public List<ContractDTO> getFeed(String authHeader){

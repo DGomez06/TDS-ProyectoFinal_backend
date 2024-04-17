@@ -3,6 +3,7 @@ package com.tdsproject.apigateway.controllers;
 import com.tdsproject.apigateway.DTO.ContractDTO;
 import com.tdsproject.apigateway.DTO.FavoriteDTO;
 import com.tdsproject.apigateway.DTO.PropertyDTO;
+import com.tdsproject.apigateway.contracts.NotifyRequest;
 import com.tdsproject.apigateway.contracts.PropertyRequest;
 import com.tdsproject.apigateway.contracts.PropertyResponse;
 import com.tdsproject.apigateway.services.ContractService;
@@ -125,10 +126,10 @@ public class PropertyController {
     @PostMapping("/notify/{id}")
     public ResponseEntity<String> notifyOwner(
             @PathVariable("id") Integer propertyId,
+            @RequestBody NotifyRequest notifyToken,
             HttpServletRequest servletRequest
     ){
-        contractService.notifyOwner(servletRequest.getHeader("Authorization"), propertyId);
-        return ResponseEntity.ok("Owner notified!");
+        return ResponseEntity.ok(contractService.notifyOwner(servletRequest.getHeader("Authorization"), propertyId, notifyToken));
     }
 
     @GetMapping("/feed")
