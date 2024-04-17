@@ -6,6 +6,7 @@ import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
 import com.tdsproject.apigateway.DTO.ContractDTO;
 import com.tdsproject.apigateway.DTO.DashboardDTO;
+import com.tdsproject.apigateway.DTO.OwnerDTO;
 import com.tdsproject.apigateway.DTO.PropertyDTO;
 import com.tdsproject.apigateway.contracts.NotifyRequest;
 import com.tdsproject.apigateway.entities.Contract;
@@ -170,5 +171,30 @@ public class ContractService {
         }
 
         return propertyDTOS;
+    }
+
+
+    public List<OwnerDTO> getAllClients(Integer userId){
+        Optional<User> usr = userRepository.findById(userId);
+
+        if (usr.isEmpty()) throw new ApiNotFoundException("User not found with given id: "+ userId);
+
+        Contract example= new Contract();
+        example.setClient(usr.get());
+        example.setStatus(StatusEnum.IN_CONTRACT);
+
+        ExampleMatcher matcher = ExampleMatcher.matching()
+                .withIgnoreNullValues()
+                .withIgnoreCase()
+                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
+
+        List<Contract> feedList = repository.findAll(Example.of(example, matcher));
+        List<OwnerDTO> ownerDTOS = new ArrayList<>();
+
+        for (Contract contract : feedList){
+            ownerDTOS.add(OwnerDTO.get(contract.getClient()));
+        }
+
+        return ownerDTOS;
     }
 }
