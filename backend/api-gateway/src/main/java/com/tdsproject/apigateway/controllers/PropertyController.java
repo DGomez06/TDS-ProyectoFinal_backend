@@ -46,6 +46,14 @@ public class PropertyController {
         return ResponseEntity.ok(propertyDTOS);
     }
 
+    @GetMapping("/rented")
+    public ResponseEntity<List<PropertyDTO>> getAllRented(
+            HttpServletRequest servletRequest
+    ){
+        var propertyDTOS = contractService.getAllRented(servletRequest.getHeader("Authorization"));
+        return ResponseEntity.ok(propertyDTOS);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<PropertyDTO> getById(@PathVariable("id") Integer id){
         return ResponseEntity.ok(service.getById(id));

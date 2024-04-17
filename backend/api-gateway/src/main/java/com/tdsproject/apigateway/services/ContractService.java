@@ -2,6 +2,7 @@ package com.tdsproject.apigateway.services;
 
 import com.tdsproject.apigateway.DTO.ContractDTO;
 import com.tdsproject.apigateway.DTO.DashboardDTO;
+import com.tdsproject.apigateway.DTO.PropertyDTO;
 import com.tdsproject.apigateway.entities.Contract;
 import com.tdsproject.apigateway.entities.Property;
 import com.tdsproject.apigateway.entities.StatusEnum;
@@ -119,5 +120,31 @@ public class ContractService {
                 contracts.size(),
                 contracts.size()
         );
+    }
+
+    public List<PropertyDTO> getAllRented(String authHeader){
+        String token = authHeader.substring(7);
+        var userId = jwtService.extractUserId(token);
+        Optional<User> usr = userRepository.findById(Integer.parseInt(userId));
+
+        if (usr.isEmpty()) throw new ApiNotFoundException("User not found with given id: "+ userId);
+
+        Contract example= new Contract();
+        example.setClient(usr.get());
+        example.setStatus(StatusEnum.IN_CONTRACT);
+
+        ExampleMatcher matcher = ExampleMatcher.matching()
+                .withIgnoreNullValues()
+                .withIgnoreCase()
+                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
+
+        List<Contract> feedList = repository.findAll(Example.of(example, matcher));
+        List<PropertyDTO> propertyDTOS = new ArrayList<>();
+
+        for (Contract contract : feedList){
+            propertyDTOS.add(PropertyDTO.get(contract.getProperty()));
+        }
+
+        return propertyDTOS;
     }
 }
