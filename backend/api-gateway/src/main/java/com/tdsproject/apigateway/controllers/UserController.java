@@ -33,7 +33,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<String> updateUser(
+    public ResponseEntity<String> updatePassword(
             HttpServletRequest servletRequest,
             @RequestBody PasswordRequest passwordRequest
             ){
