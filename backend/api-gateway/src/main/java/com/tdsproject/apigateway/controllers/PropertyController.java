@@ -123,10 +123,19 @@ public class PropertyController {
         return ResponseEntity.ok("Owner notified!");
     }
 
-    @PostMapping("/feed")
+    @GetMapping("/feed")
     public ResponseEntity<List<ContractDTO>> getAllFeed(
             HttpServletRequest servletRequest
     ){
         return ResponseEntity.ok(contractService.getFeed(servletRequest.getHeader("Authorization")));
+    }
+
+    @GetMapping("/contract/{id}")
+    public ResponseEntity<String> setContract(
+            @PathVariable("id") Integer feedId,
+            HttpServletRequest servletRequest
+    ){
+        contractService.setContract(feedId);
+        return ResponseEntity.ok("Success!");
     }
 }

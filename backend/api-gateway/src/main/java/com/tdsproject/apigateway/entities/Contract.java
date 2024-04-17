@@ -35,7 +35,7 @@ public class Contract {
         this.owner = owner;
         this.client = client;
         this.property = property;
-        this.status = StatusEnum.IN_CONTRACT;
+        this.status = StatusEnum.IN_PROCESS;
         this.createdAt = LocalDateTime.now();
     }
 

@@ -1,9 +1,10 @@
 package com.tdsproject.apigateway.services;
 
 import com.tdsproject.apigateway.DTO.ContractDTO;
-import com.tdsproject.apigateway.DTO.FavoriteDTO;
+import com.tdsproject.apigateway.DTO.DashboardDTO;
 import com.tdsproject.apigateway.entities.Contract;
 import com.tdsproject.apigateway.entities.Property;
+import com.tdsproject.apigateway.entities.StatusEnum;
 import com.tdsproject.apigateway.entities.User;
 import com.tdsproject.apigateway.exception.ApiNotFoundException;
 import com.tdsproject.apigateway.repositories.ContractRepository;
@@ -55,6 +56,7 @@ public class ContractService {
 
         Contract example= new Contract();
         example.setOwner(usr.get());
+        example.setStatus(StatusEnum.IN_PROCESS);
 
         ExampleMatcher matcher = ExampleMatcher.matching()
                 .withIgnoreNullValues()
@@ -69,5 +71,53 @@ public class ContractService {
         }
 
         return feedDTOList;
+    }
+
+    public void setContract(Integer contractId){
+        Optional<Contract> contract = repository.findById(contractId);
+
+        if (contract.isEmpty()) throw new ApiNotFoundException("Contract not found with given id: "+ contractId);
+
+        contract.get().setStatus(StatusEnum.IN_CONTRACT);
+        contract.get().getProperty().setStatus(StatusEnum.IN_CONTRACT);
+
+        propertyRepository.save(contract.get().getProperty());
+        repository.save(contract.get());
+    }
+
+    public DashboardDTO getDashboard(String authHeader){
+        String token = authHeader.substring(7);
+        var userId = jwtService.extractUserId(token);
+        Optional<User> usr = userRepository.findById(Integer.parseInt(userId));
+
+        if (usr.isEmpty()) throw new ApiNotFoundException("User not found with given id: "+ userId);
+
+        Contract example= new Contract();
+        example.setOwner(usr.get());
+        example.setStatus(StatusEnum.IN_CONTRACT);
+
+        ExampleMatcher matcher = ExampleMatcher.matching()
+                .withIgnoreNullValues()
+                .withIgnoreCase()
+                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
+
+        List<Contract> contracts = repository.findAll(Example.of(example, matcher));
+        Double totalIncome = 0.00;
+
+        if(contracts.isEmpty()) return new DashboardDTO(
+                totalIncome,
+                0,
+                0
+        );
+
+        for (Contract contract : contracts){
+            totalIncome += contract.getProperty().getPrice();
+        }
+
+        return new DashboardDTO(
+                totalIncome,
+                contracts.size(),
+                contracts.size()
+        );
     }
 }
