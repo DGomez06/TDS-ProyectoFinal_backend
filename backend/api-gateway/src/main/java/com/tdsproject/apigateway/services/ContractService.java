@@ -156,7 +156,6 @@ public class ContractService {
 
         Contract example= new Contract();
         example.setClient(usr.get());
-        example.setStatus(StatusEnum.IN_CONTRACT);
 
         ExampleMatcher matcher = ExampleMatcher.matching()
                 .withIgnoreNullValues()
