@@ -44,7 +44,7 @@ public class UserController {
         return ResponseEntity.ok("Success!");
     }
 
-    @PostMapping
+    @DeleteMapping
     public ResponseEntity<String> deleteUser(
             HttpServletRequest servletRequest
     ){
